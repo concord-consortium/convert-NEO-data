@@ -120,3 +120,32 @@ test("convertGrid skips cells whose value is not a number", () => {
   });
   assert.strictEqual(rows.length, 1);
 });
+
+test("rowsToCsv writes a five-column header with the custom value name", () => {
+  var csv = c.rowsToCsv(
+    [
+      {
+        date: "05/01/2025",
+        latitude: 0.5,
+        longitude: -179.5,
+        value: 28.74,
+        color: "#01175a"
+      }
+    ],
+    "SST"
+  );
+  var lines = csv.split("\n");
+  assert.strictEqual(lines[0], "Date,latitude,longitude,SST,color");
+  assert.strictEqual(lines[1], "05/01/2025,0.5,-179.5,28.74,#01175a");
+  assert.strictEqual(lines[2], "");
+});
+
+test("rowsToCsv quotes a value column name that contains a comma", () => {
+  var csv = c.rowsToCsv([], "Temp, C");
+  assert.strictEqual(csv.split("\n")[0], 'Date,latitude,longitude,"Temp, C",color');
+});
+
+test("rowsToCsv with no rows outputs only the header line", () => {
+  var csv = c.rowsToCsv([], "value");
+  assert.strictEqual(csv, "Date,latitude,longitude,value,color\n");
+});

@@ -96,12 +96,33 @@
     return out;
   }
 
+  function escapeCsv(field) {
+    var s = String(field);
+    if (/[",\r\n]/.test(s)) {
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+  }
+
+  function rowsToCsv(rows, valueColumnName) {
+    var header = ["Date", "latitude", "longitude", valueColumnName, "color"]
+      .map(escapeCsv)
+      .join(",");
+    var lines = rows.map(function (row) {
+      return [row.date, row.latitude, row.longitude, row.value, row.color]
+        .map(escapeCsv)
+        .join(",");
+    });
+    return header + "\n" + lines.join("\n") + (lines.length ? "\n" : "");
+  }
+
   var api = {
     parseDateFromFilename: parseDateFromFilename,
     valueToColorIndex: valueToColorIndex,
     parseActPalette: parseActPalette,
     parseGridCsv: parseGridCsv,
-    convertGrid: convertGrid
+    convertGrid: convertGrid,
+    rowsToCsv: rowsToCsv
   };
 
   if (typeof module !== "undefined" && module.exports) {
