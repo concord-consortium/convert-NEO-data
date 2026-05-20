@@ -208,3 +208,63 @@ test("outputFilename falls back to a plain name when no dates are found", () => 
   var name = c.outputFilename([{ name: "no_date_here.csv", text: "" }]);
   assert.strictEqual(name, "neo_converted.csv");
 });
+
+test("integration: converts a real NEO SST CSV file", (t) => {
+  var dataDir = path.join(__dirname, "..", "NEO-csv-files");
+  var csvPath = path.join(dataDir, "MYD28M_2025-05-01_rgb_360x180.csv");
+  var actPath = path.join(dataDir, "sst_35.act");
+  if (!fs.existsSync(csvPath) || !fs.existsSync(actPath)) {
+    t.skip("NEO-csv-files sample data not present");
+    return;
+  }
+  var palette = c.parseActPalette(new Uint8Array(fs.readFileSync(actPath)));
+  var rows = c.convertGrid(
+    fs.readFileSync(csvPath, "utf8"),
+    "MYD28M_2025-05-01_rgb_360x180.csv",
+    { min: -2, max: 35, noDataValue: 99999, palette: palette }
+  );
+  assert.strictEqual(rows.length, 34451);
+  var sample = rows.find(
+    (r) => r.latitude === 0.5 && r.longitude === -179.5
+  );
+  assert.ok(sample, "expected a row at lat 0.5 lon -179.5");
+  assert.strictEqual(sample.date, "05/01/2025");
+  assert.strictEqual(sample.value, 28.74);
+  assert.strictEqual(
+    sample.color,
+    palette[c.valueToColorIndex(28.74, -2, 35)]
+  );
+  assert.match(sample.color, /^#[0-9a-f]{6}$/);
+});
+
+test("integration: convertAll combines two real files, date-sorted", (t) => {
+  var dataDir = path.join(__dirname, "..", "NEO-csv-files");
+  var june = "MYD28M_2025-06-01_rgb_360x180.csv";
+  var may = "MYD28M_2025-05-01_rgb_360x180.csv";
+  var actPath = path.join(dataDir, "sst_35.act");
+  if (
+    !fs.existsSync(path.join(dataDir, june)) ||
+    !fs.existsSync(path.join(dataDir, may)) ||
+    !fs.existsSync(actPath)
+  ) {
+    t.skip("NEO-csv-files sample data not present");
+    return;
+  }
+  var palette = c.parseActPalette(new Uint8Array(fs.readFileSync(actPath)));
+  var entries = [
+    { name: june, text: fs.readFileSync(path.join(dataDir, june), "utf8") },
+    { name: may, text: fs.readFileSync(path.join(dataDir, may), "utf8") }
+  ];
+  var csv = c.convertAll(entries, {
+    min: -2,
+    max: 35,
+    noDataValue: 99999,
+    valueColumnName: "SST",
+    palette: palette
+  });
+  var lines = csv.split("\n");
+  assert.strictEqual(lines[0], "Date,latitude,longitude,SST,color");
+  // 34451 (May) + 35936 (June) data rows + header + trailing ""
+  assert.strictEqual(lines.length, 34451 + 35936 + 2);
+  assert.match(lines[1], /^05\/01\/2025,/);
+});
