@@ -27,3 +27,21 @@ test("parseDateFromFilename handles the .SS.CSV extension", () => {
 test("parseDateFromFilename throws when no date is present", () => {
   assert.throws(() => c.parseDateFromFilename("no_date_here.csv"), /No date/);
 });
+
+test("valueToColorIndex maps min to 0 and max to 255", () => {
+  assert.strictEqual(c.valueToColorIndex(-2, -2, 35), 0);
+  assert.strictEqual(c.valueToColorIndex(35, -2, 35), 255);
+});
+
+test("valueToColorIndex maps the midpoint to 128", () => {
+  assert.strictEqual(c.valueToColorIndex(16.5, -2, 35), 128);
+});
+
+test("valueToColorIndex clamps values outside the range", () => {
+  assert.strictEqual(c.valueToColorIndex(100, -2, 35), 255);
+  assert.strictEqual(c.valueToColorIndex(-100, -2, 35), 0);
+});
+
+test("valueToColorIndex throws when min equals max", () => {
+  assert.throws(() => c.valueToColorIndex(10, 5, 5), /different/);
+});

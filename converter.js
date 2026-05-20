@@ -14,8 +14,19 @@
     return d.month + "/" + d.day + "/" + d.year;
   }
 
+  function valueToColorIndex(value, min, max) {
+    if (max === min) {
+      throw new Error("min and max must be different");
+    }
+    var idx = Math.round(((value - min) / (max - min)) * 255);
+    if (idx < 0) idx = 0;
+    if (idx > 255) idx = 255;
+    return idx;
+  }
+
   var api = {
-    parseDateFromFilename: parseDateFromFilename
+    parseDateFromFilename: parseDateFromFilename,
+    valueToColorIndex: valueToColorIndex
   };
 
   if (typeof module !== "undefined" && module.exports) {
