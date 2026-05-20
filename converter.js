@@ -47,10 +47,36 @@
     return palette;
   }
 
+  function parseGridCsv(text) {
+    var lines = String(text)
+      .split(/\r?\n/)
+      .filter(function (line) {
+        return line.trim() !== "";
+      });
+    if (lines.length < 2) {
+      throw new Error("CSV has no data rows");
+    }
+    var header = lines[0].split(",");
+    var longitudes = header.slice(1).map(function (s) {
+      return parseFloat(s);
+    });
+    var rows = lines.slice(1).map(function (line) {
+      var cells = line.split(",");
+      return {
+        lat: parseFloat(cells[0]),
+        values: cells.slice(1).map(function (s) {
+          return parseFloat(s);
+        })
+      };
+    });
+    return { longitudes: longitudes, rows: rows };
+  }
+
   var api = {
     parseDateFromFilename: parseDateFromFilename,
     valueToColorIndex: valueToColorIndex,
-    parseActPalette: parseActPalette
+    parseActPalette: parseActPalette,
+    parseGridCsv: parseGridCsv
   };
 
   if (typeof module !== "undefined" && module.exports) {

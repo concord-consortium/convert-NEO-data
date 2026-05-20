@@ -65,3 +65,22 @@ test("parseActPalette accepts a 772-byte file", () => {
 test("parseActPalette throws on a too-small file", () => {
   assert.throws(() => c.parseActPalette(new Uint8Array(100)), /too small/);
 });
+
+test("parseGridCsv reads longitudes from the header and values from rows", () => {
+  var text = "lat/lon,-179.5,-178.5\n0.5,10,99999.0\n-0.5,12.5,13";
+  var grid = c.parseGridCsv(text);
+  assert.deepStrictEqual(grid.longitudes, [-179.5, -178.5]);
+  assert.strictEqual(grid.rows.length, 2);
+  assert.deepStrictEqual(grid.rows[0], { lat: 0.5, values: [10, 99999] });
+  assert.deepStrictEqual(grid.rows[1], { lat: -0.5, values: [12.5, 13] });
+});
+
+test("parseGridCsv ignores blank trailing lines", () => {
+  var text = "lat/lon,-179.5\n0.5,10\n\n";
+  var grid = c.parseGridCsv(text);
+  assert.strictEqual(grid.rows.length, 1);
+});
+
+test("parseGridCsv throws when there are no data rows", () => {
+  assert.throws(() => c.parseGridCsv("lat/lon,-179.5"), /no data rows/);
+});
