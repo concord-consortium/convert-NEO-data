@@ -116,13 +116,34 @@
     return header + "\n" + lines.join("\n") + (lines.length ? "\n" : "");
   }
 
+  function fileSortKey(filename) {
+    var d = extractIsoDate(filename);
+    return d ? d.year + d.month + d.day : "";
+  }
+
+  function convertAll(fileEntries, options) {
+    var sorted = fileEntries.slice().sort(function (a, b) {
+      var ka = fileSortKey(a.name);
+      var kb = fileSortKey(b.name);
+      return ka < kb ? -1 : ka > kb ? 1 : 0;
+    });
+    var allRows = [];
+    for (var i = 0; i < sorted.length; i++) {
+      allRows = allRows.concat(
+        convertGrid(sorted[i].text, sorted[i].name, options)
+      );
+    }
+    return rowsToCsv(allRows, options.valueColumnName);
+  }
+
   var api = {
     parseDateFromFilename: parseDateFromFilename,
     valueToColorIndex: valueToColorIndex,
     parseActPalette: parseActPalette,
     parseGridCsv: parseGridCsv,
     convertGrid: convertGrid,
-    rowsToCsv: rowsToCsv
+    rowsToCsv: rowsToCsv,
+    convertAll: convertAll
   };
 
   if (typeof module !== "undefined" && module.exports) {

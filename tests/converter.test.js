@@ -149,3 +149,41 @@ test("rowsToCsv with no rows outputs only the header line", () => {
   var csv = c.rowsToCsv([], "value");
   assert.strictEqual(csv, "Date,latitude,longitude,value,color\n");
 });
+
+test("convertAll combines multiple files into one CSV", () => {
+  var pal = [];
+  for (var i = 0; i < 256; i++) pal.push("idx" + i);
+  var entries = [
+    { name: "a_2025-05-01.csv", text: "lat/lon,-179.5\n0.5,10" },
+    { name: "b_2025-06-01.csv", text: "lat/lon,-179.5\n0.5,20\n-0.5,30" }
+  ];
+  var csv = c.convertAll(entries, {
+    min: 0,
+    max: 100,
+    noDataValue: 99999,
+    valueColumnName: "value",
+    palette: pal
+  });
+  var lines = csv.split("\n");
+  assert.strictEqual(lines[0], "Date,latitude,longitude,value,color");
+  assert.strictEqual(lines.length, 5); // header + 3 rows + trailing ""
+});
+
+test("convertAll sorts rows by date regardless of input order", () => {
+  var pal = [];
+  for (var i = 0; i < 256; i++) pal.push("idx" + i);
+  var entries = [
+    { name: "b_2025-06-01.csv", text: "lat/lon,-179.5\n0.5,20" },
+    { name: "a_2025-05-01.csv", text: "lat/lon,-179.5\n0.5,10" }
+  ];
+  var csv = c.convertAll(entries, {
+    min: 0,
+    max: 100,
+    noDataValue: 99999,
+    valueColumnName: "value",
+    palette: pal
+  });
+  var lines = csv.split("\n");
+  assert.match(lines[1], /^05\/01\/2025,/);
+  assert.match(lines[2], /^06\/01\/2025,/);
+});
