@@ -187,3 +187,24 @@ test("convertAll sorts rows by date regardless of input order", () => {
   assert.match(lines[1], /^05\/01\/2025,/);
   assert.match(lines[2], /^06\/01\/2025,/);
 });
+
+test("outputFilename encodes the date range across multiple files", () => {
+  var name = c.outputFilename([
+    { name: "MYD28M_2026-03-01_rgb_360x180.csv", text: "" },
+    { name: "MYD28M_2025-04-01_rgb_360x180.csv", text: "" },
+    { name: "MYD28M_2025-09-01_rgb_360x180.csv", text: "" }
+  ]);
+  assert.strictEqual(name, "neo_converted_2025-04-01_to_2026-03-01.csv");
+});
+
+test("outputFilename uses a single date when all files share one date", () => {
+  var name = c.outputFilename([
+    { name: "MYD28M_2025-05-01_rgb_360x180.csv", text: "" }
+  ]);
+  assert.strictEqual(name, "neo_converted_2025-05-01.csv");
+});
+
+test("outputFilename falls back to a plain name when no dates are found", () => {
+  var name = c.outputFilename([{ name: "no_date_here.csv", text: "" }]);
+  assert.strictEqual(name, "neo_converted.csv");
+});

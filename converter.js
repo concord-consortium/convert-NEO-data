@@ -136,6 +136,29 @@
     return rowsToCsv(allRows, options.valueColumnName);
   }
 
+  function outputFilename(fileEntries) {
+    var isos = fileEntries
+      .map(function (e) {
+        return extractIsoDate(e.name);
+      })
+      .filter(function (d) {
+        return d !== null;
+      })
+      .map(function (d) {
+        return d.year + "-" + d.month + "-" + d.day;
+      })
+      .sort();
+    if (isos.length === 0) {
+      return "neo_converted.csv";
+    }
+    var first = isos[0];
+    var last = isos[isos.length - 1];
+    if (first === last) {
+      return "neo_converted_" + first + ".csv";
+    }
+    return "neo_converted_" + first + "_to_" + last + ".csv";
+  }
+
   var api = {
     parseDateFromFilename: parseDateFromFilename,
     valueToColorIndex: valueToColorIndex,
@@ -143,7 +166,8 @@
     parseGridCsv: parseGridCsv,
     convertGrid: convertGrid,
     rowsToCsv: rowsToCsv,
-    convertAll: convertAll
+    convertAll: convertAll,
+    outputFilename: outputFilename
   };
 
   if (typeof module !== "undefined" && module.exports) {
