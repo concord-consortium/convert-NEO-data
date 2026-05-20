@@ -45,3 +45,23 @@ test("valueToColorIndex clamps values outside the range", () => {
 test("valueToColorIndex throws when min equals max", () => {
   assert.throws(() => c.valueToColorIndex(10, 5, 5), /different/);
 });
+
+test("parseActPalette returns 256 lowercase hex colors", () => {
+  var bytes = new Uint8Array(768);
+  bytes[15] = 255; // index 5, red
+  bytes[16] = 128; // index 5, green
+  bytes[17] = 0; // index 5, blue
+  var palette = c.parseActPalette(bytes);
+  assert.strictEqual(palette.length, 256);
+  assert.strictEqual(palette[5], "#ff8000");
+  assert.strictEqual(palette[0], "#000000");
+});
+
+test("parseActPalette accepts a 772-byte file", () => {
+  var palette = c.parseActPalette(new Uint8Array(772));
+  assert.strictEqual(palette.length, 256);
+});
+
+test("parseActPalette throws on a too-small file", () => {
+  assert.throws(() => c.parseActPalette(new Uint8Array(100)), /too small/);
+});
