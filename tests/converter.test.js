@@ -84,3 +84,39 @@ test("parseGridCsv ignores blank trailing lines", () => {
 test("parseGridCsv throws when there are no data rows", () => {
   assert.throws(() => c.parseGridCsv("lat/lon,-179.5"), /no data rows/);
 });
+
+test("convertGrid skips no-data cells and maps each cell to a point row", () => {
+  var pal = [];
+  for (var i = 0; i < 256; i++) pal.push("idx" + i);
+  var text = "lat/lon,-179.5,-178.5\n0.5,10,99999.0\n-0.5,12.5,13";
+  var rows = c.convertGrid(text, "x_2025-05-01_y.csv", {
+    min: 0,
+    max: 100,
+    noDataValue: 99999,
+    palette: pal
+  });
+  assert.strictEqual(rows.length, 3);
+  assert.deepStrictEqual(rows[0], {
+    date: "05/01/2025",
+    latitude: 0.5,
+    longitude: -179.5,
+    value: 10,
+    color: "idx" + c.valueToColorIndex(10, 0, 100)
+  });
+  assert.strictEqual(rows[1].longitude, -179.5);
+  assert.strictEqual(rows[1].latitude, -0.5);
+  assert.strictEqual(rows[2].longitude, -178.5);
+});
+
+test("convertGrid skips cells whose value is not a number", () => {
+  var pal = [];
+  for (var i = 0; i < 256; i++) pal.push("idx" + i);
+  var text = "lat/lon,-179.5,-178.5\n0.5,10,";
+  var rows = c.convertGrid(text, "x_2025-05-01_y.csv", {
+    min: 0,
+    max: 100,
+    noDataValue: 99999,
+    palette: pal
+  });
+  assert.strictEqual(rows.length, 1);
+});

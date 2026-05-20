@@ -72,11 +72,36 @@
     return { longitudes: longitudes, rows: rows };
   }
 
+  function convertGrid(csvText, filename, options) {
+    var date = parseDateFromFilename(filename);
+    var grid = parseGridCsv(csvText);
+    var out = [];
+    for (var r = 0; r < grid.rows.length; r++) {
+      var row = grid.rows[r];
+      for (var col = 0; col < row.values.length; col++) {
+        var value = row.values[col];
+        if (Number.isNaN(value) || value === options.noDataValue) {
+          continue;
+        }
+        var idx = valueToColorIndex(value, options.min, options.max);
+        out.push({
+          date: date,
+          latitude: row.lat,
+          longitude: grid.longitudes[col],
+          value: value,
+          color: options.palette[idx]
+        });
+      }
+    }
+    return out;
+  }
+
   var api = {
     parseDateFromFilename: parseDateFromFilename,
     valueToColorIndex: valueToColorIndex,
     parseActPalette: parseActPalette,
-    parseGridCsv: parseGridCsv
+    parseGridCsv: parseGridCsv,
+    convertGrid: convertGrid
   };
 
   if (typeof module !== "undefined" && module.exports) {
