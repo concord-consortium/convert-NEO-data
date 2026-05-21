@@ -113,7 +113,7 @@
     <fieldset>
       <legend>3. CSV files</legend>
       <div id="drop">
-        Drop NEO CSV files or a folder here, or click to choose files
+        Drop NEO CSV files here, or click to choose files
       </div>
       <input type="file" id="csvInput" accept=".csv" multiple hidden />
       <div id="fileList"></div>
@@ -217,60 +217,8 @@
         drop.addEventListener("drop", function (e) {
           e.preventDefault();
           drop.classList.remove("over");
-          var items = e.dataTransfer.items;
-          if (items && items.length && items[0].webkitGetAsEntry) {
-            var entries = [];
-            for (var i = 0; i < items.length; i++) {
-              var entry = items[i].webkitGetAsEntry();
-              if (entry) entries.push(entry);
-            }
-            collectEntries(entries, []).then(addCsvFiles);
-          } else {
-            addCsvFiles(e.dataTransfer.files);
-          }
+          addCsvFiles(e.dataTransfer.files);
         });
-
-        // Recursively walk dropped FileSystemEntry items (handles folders).
-        function collectEntries(entries, acc) {
-          return entries
-            .reduce(function (p, entry) {
-              return p.then(function () {
-                if (entry.isFile) {
-                  return new Promise(function (resolve) {
-                    entry.file(function (f) {
-                      acc.push(f);
-                      resolve();
-                    });
-                  });
-                }
-                if (entry.isDirectory) {
-                  return readDir(entry).then(function (children) {
-                    return collectEntries(children, acc);
-                  });
-                }
-              });
-            }, Promise.resolve())
-            .then(function () {
-              return acc;
-            });
-        }
-
-        function readDir(dirEntry) {
-          return new Promise(function (resolve) {
-            var reader = dirEntry.createReader();
-            var all = [];
-            (function readBatch() {
-              reader.readEntries(function (batch) {
-                if (batch.length === 0) {
-                  resolve(all);
-                } else {
-                  all = all.concat(Array.prototype.slice.call(batch));
-                  readBatch();
-                }
-              });
-            })();
-          });
-        }
 
         // --- file reading ---
         function readText(file) {

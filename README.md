@@ -28,8 +28,7 @@ flat table with one row per data point:
    color scale (defaults: -2 and 35, matching the included `sst_35.act` palette).
    Values are mapped linearly across the 256-color palette. Choose the **Output**
    mode: one combined CSV, or a ZIP with one converted CSV per input file.
-4. **CSV files** — drop NEO CSV files (or a folder of them) onto the drop zone, or
-   click to choose files.
+4. **CSV files** — drop NEO CSV files onto the drop zone, or click to choose files.
 5. Click **Convert & Download**.
 
 A combined run downloads one CSV named for its date range, e.g.
