@@ -268,3 +268,81 @@ test("integration: convertAll combines two real files, date-sorted", (t) => {
   assert.strictEqual(lines.length, 34451 + 35936 + 2);
   assert.match(lines[1], /^05\/01\/2025,/);
 });
+
+test("convertSeparate converts each file to its own dated CSV, date-sorted", () => {
+  var pal = [];
+  for (var i = 0; i < 256; i++) pal.push("idx" + i);
+  var entries = [
+    { name: "b_2025-06-01.csv", text: "lat/lon,-179.5\n0.5,20\n-0.5,30" },
+    { name: "a_2025-05-01.csv", text: "lat/lon,-179.5\n0.5,10" }
+  ];
+  var parts = c.convertSeparate(entries, {
+    min: 0,
+    max: 100,
+    noDataValue: 99999,
+    valueColumnName: "value",
+    palette: pal
+  });
+  assert.strictEqual(parts.length, 2);
+  assert.strictEqual(parts[0].name, "neo_converted_2025-05-01.csv");
+  assert.strictEqual(parts[1].name, "neo_converted_2025-06-01.csv");
+  assert.strictEqual(
+    parts[0].content.split("\n")[0],
+    "Date,latitude,longitude,value,color"
+  );
+  assert.strictEqual(parts[0].content.split("\n").length - 2, 1);
+  assert.strictEqual(parts[1].content.split("\n").length - 2, 2);
+});
+
+test("convertSeparate disambiguates files that resolve to the same date", () => {
+  var pal = [];
+  for (var i = 0; i < 256; i++) pal.push("idx" + i);
+  var entries = [
+    { name: "x_2025-05-01.csv", text: "lat/lon,-179.5\n0.5,10" },
+    { name: "y_2025-05-01.csv", text: "lat/lon,-179.5\n0.5,20" }
+  ];
+  var parts = c.convertSeparate(entries, {
+    min: 0,
+    max: 100,
+    noDataValue: 99999,
+    valueColumnName: "value",
+    palette: pal
+  });
+  assert.strictEqual(parts.length, 2);
+  assert.strictEqual(parts[0].name, "neo_converted_2025-05-01.csv");
+  assert.strictEqual(parts[1].name, "neo_converted_2025-05-01_2.csv");
+});
+
+test("buildZip produces a valid stored-zip container with correct CRCs", () => {
+  var zlib = require("node:zlib");
+  var zip = c.buildZip([
+    { name: "first.csv", content: "hello world" },
+    { name: "second.csv", content: "second file body" }
+  ]);
+  assert.ok(zip instanceof Uint8Array);
+  assert.deepStrictEqual(
+    [zip[0], zip[1], zip[2], zip[3]],
+    [0x50, 0x4b, 0x03, 0x04]
+  );
+  var crc =
+    (zip[14] | (zip[15] << 8) | (zip[16] << 16) | (zip[17] << 24)) >>> 0;
+  assert.strictEqual(crc, zlib.crc32("hello world") >>> 0);
+  var hasEnd = false;
+  for (var i = 0; i < zip.length - 3; i++) {
+    if (
+      zip[i] === 0x50 &&
+      zip[i + 1] === 0x4b &&
+      zip[i + 2] === 0x05 &&
+      zip[i + 3] === 0x06
+    ) {
+      hasEnd = true;
+      assert.strictEqual(zip[i + 10] | (zip[i + 11] << 8), 2);
+      break;
+    }
+  }
+  assert.ok(hasEnd, "expected end-of-central-directory record");
+  var text = Buffer.from(zip).toString("latin1");
+  assert.ok(text.indexOf("hello world") !== -1);
+  assert.ok(text.indexOf("second file body") !== -1);
+  assert.ok(text.indexOf("first.csv") !== -1);
+});

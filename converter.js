@@ -159,6 +159,139 @@
     return "neo_converted_" + first + "_to_" + last + ".csv";
   }
 
+  function convertSeparate(fileEntries, options) {
+    var sorted = fileEntries.slice().sort(function (a, b) {
+      var ka = fileSortKey(a.name);
+      var kb = fileSortKey(b.name);
+      return ka < kb ? -1 : ka > kb ? 1 : 0;
+    });
+    var used = {};
+    var out = [];
+    for (var i = 0; i < sorted.length; i++) {
+      var csv = rowsToCsv(
+        convertGrid(sorted[i].text, sorted[i].name, options),
+        options.valueColumnName
+      );
+      var name = outputFilename([sorted[i]]);
+      if (used[name]) {
+        used[name] += 1;
+        name = name.replace(/\.csv$/, "") + "_" + used[name] + ".csv";
+      } else {
+        used[name] = 1;
+      }
+      out.push({ name: name, content: csv });
+    }
+    return out;
+  }
+
+  var crc32Table = null;
+  function crc32(bytes) {
+    if (!crc32Table) {
+      crc32Table = [];
+      for (var n = 0; n < 256; n++) {
+        var cc = n;
+        for (var k = 0; k < 8; k++) {
+          cc = cc & 1 ? 0xedb88320 ^ (cc >>> 1) : cc >>> 1;
+        }
+        crc32Table[n] = cc >>> 0;
+      }
+    }
+    var crc = 0xffffffff;
+    for (var i = 0; i < bytes.length; i++) {
+      crc = (crc >>> 8) ^ crc32Table[(crc ^ bytes[i]) & 0xff];
+    }
+    return (crc ^ 0xffffffff) >>> 0;
+  }
+
+  function concatBytes(parts) {
+    var total = 0;
+    for (var i = 0; i < parts.length; i++) {
+      total += parts[i].length;
+    }
+    var out = new Uint8Array(total);
+    var pos = 0;
+    for (var j = 0; j < parts.length; j++) {
+      out.set(parts[j], pos);
+      pos += parts[j].length;
+    }
+    return out;
+  }
+
+  // Build an uncompressed (stored) ZIP archive from [{name, content}] entries.
+  function buildZip(files) {
+    var encoder = new TextEncoder();
+    function u16(n) {
+      return new Uint8Array([n & 0xff, (n >>> 8) & 0xff]);
+    }
+    function u32(n) {
+      return new Uint8Array([
+        n & 0xff,
+        (n >>> 8) & 0xff,
+        (n >>> 16) & 0xff,
+        (n >>> 24) & 0xff
+      ]);
+    }
+    var chunks = [];
+    var central = [];
+    var offset = 0;
+    for (var i = 0; i < files.length; i++) {
+      var nameBytes = encoder.encode(files[i].name);
+      var dataBytes = encoder.encode(files[i].content);
+      var crc = crc32(dataBytes);
+      var local = concatBytes([
+        u32(0x04034b50), // local file header signature
+        u16(20), // version needed to extract
+        u16(0), // general purpose flags
+        u16(0), // compression method: 0 = stored
+        u16(0), // last mod time
+        u16(0), // last mod date
+        u32(crc),
+        u32(dataBytes.length), // compressed size
+        u32(dataBytes.length), // uncompressed size
+        u16(nameBytes.length),
+        u16(0), // extra field length
+        nameBytes
+      ]);
+      chunks.push(local, dataBytes);
+      central.push(
+        concatBytes([
+          u32(0x02014b50), // central directory header signature
+          u16(20), // version made by
+          u16(20), // version needed to extract
+          u16(0), // general purpose flags
+          u16(0), // compression method
+          u16(0), // last mod time
+          u16(0), // last mod date
+          u32(crc),
+          u32(dataBytes.length),
+          u32(dataBytes.length),
+          u16(nameBytes.length),
+          u16(0), // extra field length
+          u16(0), // file comment length
+          u16(0), // disk number start
+          u16(0), // internal file attributes
+          u32(0), // external file attributes
+          u32(offset), // offset of local header
+          nameBytes
+        ])
+      );
+      offset += local.length + dataBytes.length;
+    }
+    var centralBytes = concatBytes(central);
+    var end = concatBytes([
+      u32(0x06054b50), // end of central directory signature
+      u16(0), // number of this disk
+      u16(0), // disk where central directory starts
+      u16(files.length), // central directory records on this disk
+      u16(files.length), // total central directory records
+      u32(centralBytes.length), // size of central directory
+      u32(offset), // offset of central directory
+      u16(0) // comment length
+    ]);
+    chunks.push(centralBytes, end);
+    return concatBytes(chunks);
+  }
+
   var api = {
     parseDateFromFilename: parseDateFromFilename,
     valueToColorIndex: valueToColorIndex,
@@ -167,7 +300,9 @@
     convertGrid: convertGrid,
     rowsToCsv: rowsToCsv,
     convertAll: convertAll,
-    outputFilename: outputFilename
+    convertSeparate: convertSeparate,
+    outputFilename: outputFilename,
+    buildZip: buildZip
   };
 
   if (typeof module !== "undefined" && module.exports) {

@@ -17,7 +17,8 @@ flat table with one row per data point:
 - **value** — the measured value. The column name is configurable (e.g. `SST`).
 - **color** — a hex color (`#rrggbb`) looked up from an Adobe Color Table (`.act`) palette.
 - No-data cells (value `99999`) are dropped.
-- Multiple input files are combined into one output, sorted by date.
+- Multiple input files can be combined into one output (sorted by date), or
+  converted individually and bundled into a ZIP.
 
 ## Usage
 
@@ -25,13 +26,15 @@ flat table with one row per data point:
 2. **Color palette** — choose an Adobe Color Table (`.act`) file.
 3. **Settings** — set the value column name and the minimum/maximum values for the
    color scale (defaults: -2 and 35, matching the included `sst_35.act` palette).
-   Values are mapped linearly across the 256-color palette.
+   Values are mapped linearly across the 256-color palette. Choose the **Output**
+   mode: one combined CSV, or a ZIP with one converted CSV per input file.
 4. **CSV files** — drop NEO CSV files (or a folder of them) onto the drop zone, or
    click to choose files.
 5. Click **Convert & Download**.
 
-The result downloads as a single CSV named for its date range, e.g.
-`neo_converted_2025-04-01_to_2026-03-01.csv`.
+A combined run downloads one CSV named for its date range, e.g.
+`neo_converted_2025-04-01_to_2026-03-01.csv`. A ZIP run downloads
+`neo_converted_<range>.zip` containing one `neo_converted_<date>.csv` per input file.
 
 ## Input format
 
