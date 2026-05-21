@@ -136,7 +136,13 @@
     return rowsToCsv(allRows, options.valueColumnName);
   }
 
-  function outputFilename(fileEntries) {
+  function sanitizeForFilename(name) {
+    return String(name)
+      .replace(/[^A-Za-z0-9._-]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  function outputFilename(fileEntries, valueColumnName) {
     var isos = fileEntries
       .map(function (e) {
         return extractIsoDate(e.name);
@@ -148,15 +154,17 @@
         return d.year + "-" + d.month + "-" + d.day;
       })
       .sort();
+    var slug = sanitizeForFilename(valueColumnName || "");
+    var prefix = slug ? "neo_converted_" + slug : "neo_converted";
     if (isos.length === 0) {
-      return "neo_converted.csv";
+      return prefix + ".csv";
     }
     var first = isos[0];
     var last = isos[isos.length - 1];
     if (first === last) {
-      return "neo_converted_" + first + ".csv";
+      return prefix + "_" + first + ".csv";
     }
-    return "neo_converted_" + first + "_to_" + last + ".csv";
+    return prefix + "_" + first + "_to_" + last + ".csv";
   }
 
   function convertSeparate(fileEntries, options) {
@@ -172,7 +180,7 @@
         convertGrid(sorted[i].text, sorted[i].name, options),
         options.valueColumnName
       );
-      var name = outputFilename([sorted[i]]);
+      var name = outputFilename([sorted[i]], options.valueColumnName);
       if (used[name]) {
         used[name] += 1;
         name = name.replace(/\.csv$/, "") + "_" + used[name] + ".csv";

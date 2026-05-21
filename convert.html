@@ -272,10 +272,10 @@
                 var rowTotal = parts.reduce(function (sum, part) {
                   return sum + (part.content.split("\n").length - 2);
                 }, 0);
-                var zipName = Converter.outputFilename(entries).replace(
-                  /\.csv$/,
-                  ".zip"
-                );
+                var zipName = Converter.outputFilename(
+                  entries,
+                  valueColumnName
+                ).replace(/\.csv$/, ".zip");
                 triggerDownload(
                   new Blob([Converter.buildZip(parts)], {
                     type: "application/zip"
@@ -293,7 +293,10 @@
                 );
               } else {
                 var csv = Converter.convertAll(entries, options);
-                var filename = Converter.outputFilename(entries);
+                var filename = Converter.outputFilename(
+                  entries,
+                  valueColumnName
+                );
                 triggerDownload(
                   new Blob([csv], { type: "text/csv" }),
                   filename

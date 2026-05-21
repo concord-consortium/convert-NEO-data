@@ -31,9 +31,11 @@ flat table with one row per data point:
 4. **CSV files** — drop NEO CSV files onto the drop zone, or click to choose files.
 5. Click **Convert & Download**.
 
-A combined run downloads one CSV named for its date range, e.g.
-`neo_converted_2025-04-01_to_2026-03-01.csv`. A ZIP run downloads
-`neo_converted_<range>.zip` containing one `neo_converted_<date>.csv` per input file.
+The value column name and date range are baked into every output filename. A
+combined run downloads one CSV, e.g.
+`neo_converted_SST_2025-04-01_to_2026-03-01.csv`. A ZIP run downloads
+`neo_converted_<value>_<range>.zip` containing one
+`neo_converted_<value>_<date>.csv` per input file.
 
 ## Input format
 

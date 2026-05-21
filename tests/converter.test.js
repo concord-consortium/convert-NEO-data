@@ -284,8 +284,8 @@ test("convertSeparate converts each file to its own dated CSV, date-sorted", () 
     palette: pal
   });
   assert.strictEqual(parts.length, 2);
-  assert.strictEqual(parts[0].name, "neo_converted_2025-05-01.csv");
-  assert.strictEqual(parts[1].name, "neo_converted_2025-06-01.csv");
+  assert.strictEqual(parts[0].name, "neo_converted_value_2025-05-01.csv");
+  assert.strictEqual(parts[1].name, "neo_converted_value_2025-06-01.csv");
   assert.strictEqual(
     parts[0].content.split("\n")[0],
     "Date,latitude,longitude,value,color"
@@ -309,8 +309,8 @@ test("convertSeparate disambiguates files that resolve to the same date", () => 
     palette: pal
   });
   assert.strictEqual(parts.length, 2);
-  assert.strictEqual(parts[0].name, "neo_converted_2025-05-01.csv");
-  assert.strictEqual(parts[1].name, "neo_converted_2025-05-01_2.csv");
+  assert.strictEqual(parts[0].name, "neo_converted_value_2025-05-01.csv");
+  assert.strictEqual(parts[1].name, "neo_converted_value_2025-05-01_2.csv");
 });
 
 test("buildZip produces a valid stored-zip container with correct CRCs", () => {
@@ -345,4 +345,34 @@ test("buildZip produces a valid stored-zip container with correct CRCs", () => {
   assert.ok(text.indexOf("hello world") !== -1);
   assert.ok(text.indexOf("second file body") !== -1);
   assert.ok(text.indexOf("first.csv") !== -1);
+});
+
+test("outputFilename includes the value column name across a date range", () => {
+  var name = c.outputFilename(
+    [
+      { name: "a_2025-04-01.csv", text: "" },
+      { name: "b_2026-03-01.csv", text: "" }
+    ],
+    "SST"
+  );
+  assert.strictEqual(name, "neo_converted_SST_2025-04-01_to_2026-03-01.csv");
+});
+
+test("outputFilename includes the value column name with a single date", () => {
+  var name = c.outputFilename(
+    [{ name: "a_2025-05-01.csv", text: "" }],
+    "SST"
+  );
+  assert.strictEqual(name, "neo_converted_SST_2025-05-01.csv");
+});
+
+test("outputFilename sanitizes unsafe characters in the value name", () => {
+  var name = c.outputFilename(
+    [{ name: "a_2025-05-01.csv", text: "" }],
+    "Sea Surface Temp (C)"
+  );
+  assert.strictEqual(
+    name,
+    "neo_converted_Sea_Surface_Temp_C_2025-05-01.csv"
+  );
 });
