@@ -23,12 +23,15 @@ flat table with one row per data point:
 ## Usage
 
 1. Open `convert.html` in a web browser (double-click it — no server or install needed).
-2. **Color palette** — choose an Adobe Color Table (`.act`) file.
+2. **Color palette** — choose an Adobe Color Table (`.act`) file. On NEO, this is
+   the **legend** download for the dataset.
 3. **Settings** — set the value column name and the minimum/maximum values for the
    color scale (defaults: -2 and 35, matching the included `sst_35.act` palette).
    Values are mapped linearly across the 256-color palette. Choose the **Output**
    mode: one combined CSV, or a ZIP with one converted CSV per input file.
 4. **CSV files** — drop NEO CSV files onto the drop zone, or click to choose files.
+   Download each map from NEO in **CSV for Excel** format; the **1°** resolution
+   is recommended.
 5. Click **Convert & Download**.
 
 The value column name and date range are baked into every output filename. A
@@ -39,7 +42,8 @@ combined run downloads one CSV, e.g.
 
 ## Input format
 
-The tool expects NEO "labeled grid" CSV files:
+The tool expects NEO CSV files downloaded in **CSV for Excel** format — a labeled
+grid:
 
 - The first line is a header: the literal text `lat/lon` followed by longitude values.
 - Each following line starts with a latitude, followed by one value per longitude.

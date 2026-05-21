@@ -81,6 +81,11 @@
         font-weight: 400;
         margin: 0.2rem 0;
       }
+      .hint {
+        font-size: 0.8rem;
+        color: #555;
+        margin: 0.3rem 0 0.2rem;
+      }
     </style>
   </head>
   <body>
@@ -92,6 +97,9 @@
 
     <fieldset>
       <legend>1. Color palette</legend>
+      <p class="hint">
+        On NEO, this is the <strong>legend</strong> download for your dataset.
+      </p>
       <label for="actInput">Adobe Color Table (.act) file</label>
       <input type="file" id="actInput" accept=".act" />
       <div id="actStatus"></div>
@@ -99,7 +107,7 @@
 
     <fieldset>
       <legend>2. Settings</legend>
-      <label for="valueName">Value column name</label>
+      <label for="valueName">Value column name. (ex. sea surface temperature)</label>
       <input type="text" id="valueName" value="value" />
       <label for="minVal">Minimum value (maps to first palette color)</label>
       <input type="number" id="minVal" value="-2" step="any" />
@@ -112,6 +120,10 @@
 
     <fieldset>
       <legend>3. CSV files</legend>
+      <p class="hint">
+        On NEO, download each map in <strong>CSV for Excel</strong> format. The
+        <strong>1&deg;</strong> resolution is recommended.
+      </p>
       <div id="drop">
         Drop NEO CSV files here, or click to choose files
       </div>
