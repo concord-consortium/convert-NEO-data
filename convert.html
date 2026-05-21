@@ -86,6 +86,10 @@
         color: #555;
         margin: 0.3rem 0 0.2rem;
       }
+      .drop-note {
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+      }
     </style>
   </head>
   <body>
@@ -126,6 +130,10 @@
       </p>
       <div id="drop">
         Drop NEO CSV files here, or click to choose files
+        <div class="drop-note">
+          (Make sure the date formatted as YYYY-MM-DD is in the name of each csv
+          file.)
+        </div>
       </div>
       <input type="file" id="csvInput" accept=".csv" multiple hidden />
       <div id="fileList"></div>
